@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Plan Records</string>
+    <string name="home">Home</string>
+    <string name="add_plan">addplan</string>
+</resources>
