@@ -4,6 +4,7 @@ package com.example.planrecords.screen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +38,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -59,7 +61,7 @@ fun PlanRecordsApp() {
 
     // 觀察當前導航的 BackStackEntry 狀態
     val backStackEntry by navController.currentBackStackEntryAsState()
-
+    val currentRoute = backStackEntry?.destination?.route
 
     // 依據導航棧狀態來計算 canNavigateBack
     val canNavigateBack = remember(backStackEntry) {
@@ -88,6 +90,19 @@ fun PlanRecordsApp() {
                 canNavigateBack = canNavigateBack,
                 onNavigateUp = { navController.navigateUp() }
             )
+        },
+        floatingActionButton = {
+            // ✅ 只在 home_screen 顯示 FAB
+            if (currentRoute == "home_screen") {
+                FloatingActionButton(
+                    onClick = { navController.navigate("add_plan_screen") }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add New Plan"
+                    )
+                }
+            }
         }
     ) { paddingValues ->
         NavHost(
@@ -95,13 +110,14 @@ fun PlanRecordsApp() {
             startDestination = "home_screen",
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+
         ) {
-            composable("home_screen") { HomeScreen(navController) }
+            composable("home_screen") { HomeScreen(navController, paddingValues) }
             composable("add_plan_screen") {
                 AddPlanScreen(
                     onCancel = onCancel,
-                    navController = navController
+                    navController = navController,
+                    paddingValues = paddingValues
                 )
             }
         }
@@ -128,47 +144,44 @@ fun PlanRecordsTopBar(canNavigateBack: Boolean, onNavigateUp: () -> Unit) {
 @Composable
 fun HomeScreen(
     navController: NavController,
+    paddingValues: PaddingValues,
     viewModel: HomeViewModel = hiltViewModel()  // 使用 Hilt 注入 ViewModel
 ) {
     val planList by viewModel.planList.collectAsState()
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("add_plan_screen") },
-                content = {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add New Plan"
-                    )
-                }
+    if (planList.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding()
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("No plans available")
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding()
+                ),
+            contentPadding = PaddingValues(
+                start = 8.dp,
+                end = 8.dp
             )
-        },
-        content = { paddingValues ->
-            if (planList.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = androidx.compose.ui.Alignment.Center
-                ) {
-                    Text("No plans available")
-                }
-            } else {
-                LazyColumn(
-                    contentPadding = paddingValues,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(planList) { plan ->
-                        PlanItem(
-                            plan = plan,
-                            onDelete = { viewModel.deletePlan(plan.id) }
-                        )
-                    }
-                }
+        ) {
+            items(planList) { plan ->
+                PlanItem(
+                    plan = plan,
+                    onDelete = { viewModel.deletePlan(plan.id) }
+                )
             }
         }
-    )
+    }
 }
 
 @Composable
@@ -176,7 +189,7 @@ fun PlanItem(plan: Plan, onDelete: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(vertical = 4.dp, horizontal = 8.dp),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp,  // 默认高度
             pressedElevation = 8.dp,  // 按下时的高度

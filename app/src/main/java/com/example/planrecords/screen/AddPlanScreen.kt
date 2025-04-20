@@ -23,25 +23,23 @@ import androidx.navigation.NavHostController
 import com.example.planrecords.viewmodel.AddPlanViewModel
 
 @Composable
-fun AddPlanScreen(viewModel: AddPlanViewModel = hiltViewModel(),onCancel: (String) -> Unit, navController: NavHostController) {
+fun AddPlanScreen(viewModel: AddPlanViewModel = hiltViewModel(),
+                  onCancel: (String) -> Unit,
+                  navController: NavHostController,
+                  paddingValues: PaddingValues) {
     val planName = remember { mutableStateOf(TextFieldValue()) }
     val targetCount = remember { mutableStateOf(TextFieldValue()) }
     val frequency = rememberSaveable { mutableStateOf("Daily") }
-// 用于滚动的状态
-   // val scrollState = rememberScrollState()
-    Scaffold(
-        // Scaffold 支持 FloatingActionButton 和可滚动内容
-        floatingActionButton = {
-            FloatingActionButton(onClick = { /* 保存逻辑 */ }) {
-                Icon(Icons.Default.Create, contentDescription = "Save Plan")
-            }
-        }
-    ){ paddingValues ->
+
         LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues)
+            .padding(
+                top = paddingValues.calculateTopPadding(),
+                bottom = paddingValues.calculateBottomPadding()
+            )
             .imePadding(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
             item {
@@ -69,7 +67,7 @@ fun AddPlanScreen(viewModel: AddPlanViewModel = hiltViewModel(),onCancel: (Strin
             Text("Selected Frequency: ${frequency.value}", modifier = Modifier.padding(top = 16.dp))
         }
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
             item {
                 Row(
@@ -100,7 +98,7 @@ fun AddPlanScreen(viewModel: AddPlanViewModel = hiltViewModel(),onCancel: (Strin
                 }
             }
     }
-}
+
 }
 
 
